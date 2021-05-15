@@ -52,25 +52,25 @@ int main(void)
   //   return EXIT_FAILURE;                                                                             
   // }    
   char query[50];
-  snprintf(query,49,"INSERT INTO mydb.usuario values(%d,\"%s\",%d)",2,"ALOU", 1);
+  //snprintf(query,49,"INSERT INTO mydb.usuario values(%d,\"%s\",%d)",2,"ALOU", 1);
   //printf("%s",query);
-  if (mysql_query(conn, "SELECT username from mydb.usuario where username = \"kk1\"") != 0)
+  if (mysql_query(conn, "SELECT socket from mydb.usuario where username = \"asdfgh\"") != 0)
   {
     fprintf(stderr, "Query Failure\n");
     return EXIT_FAILURE;                                                                             
   }
   MYSQL_RES *result ;
-  result = mysql_store_result(conn);     
-
+  result = mysql_store_result(conn);  
 
  int num_fields = mysql_num_fields(result);
 
   MYSQL_ROW row;
   MYSQL_ROW row2;
   row = mysql_fetch_row(result);
-  if(row==NULL){
+  printf("%s\n", row[0]);
+  if(row[0]==NULL){
     printf("\nKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK");
-   return "NULL" 
+   return "NULL"; 
   }
   // printf("FOI?--- %s",row[0]);
   /*
