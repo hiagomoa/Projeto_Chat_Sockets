@@ -11,6 +11,22 @@
 
 // na hr de conectar verificar msgs que lhe foram recebidas enquanto estava offline
 // quando sair setar flag do banco para 0
+// typedef struct Message
+// {
+//     int messageType[2];//tipo da requisição ex: envio, get users...
+// 	//int countUserOnline;
+//     char user[100];
+//     char data[1024]; 
+//     char destName[100];
+// 	//char originName[1024];
+//     char userOnline[100][1024];
+// } message;
+
+typedef struct Users
+{
+    char name[100];
+} users;
+
 typedef struct Message
 {
     int messageType[2];//tipo da requisição ex: envio, get users...
@@ -19,7 +35,7 @@ typedef struct Message
     char data[1024]; 
     char destName[100];
 	//char originName[1024];
-    char userOnline[100][1024];
+    users userOnline[100];
 } message;
 
 /*messageType[0] Para serv
@@ -42,7 +58,7 @@ void * doRecieving(void * sockID){
 	while(1){
 
 		message data;
-		memset(&data, '0', sizeof(data) );
+		memset(&data, '0', sizeof(data));
 		int read = recv(clientSocket,(message *)&data, sizeof data, 0);
 		printf("PPPPP %d - %d\n",data.messageType[0], data.messageType[1] );
 
@@ -58,7 +74,7 @@ void * doRecieving(void * sockID){
 		if(data.messageType[0] == 3){
 			printf("\nUsuarios Online :\n");
 			for(int i=0; i< data.messageType[1] ; i++){
-				printf("- %s\n",data.userOnline[i]);
+				printf("- %s\n",data.userOnline[i].name);
 			}
 		}
 	}
@@ -72,7 +88,7 @@ int main(){
 
 	message msg;	
 	memset(&msg, '\0', sizeof(msg) );
-
+	printf("\n%d", sizeof(msg));
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(8888);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -85,10 +101,11 @@ int main(){
 	pthread_create(&thread, NULL, doRecieving, (void *) &clientSocket );
 	printf("Login do Servidor...\n");
 	printf("Digite seu Username: ");
-	scanf("%[^\n]s", msg.user);
+	gets(msg.user);
 	
 	msg.messageType[0] = 1;
-
+	printf("SEGUNDO%d\n", sizeof(msg));
+	sleep(3);
 	int rtn = send(clientSocket,(void*)&msg, sizeof(msg),0);
 	printf("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU");
 	char userChat[100];

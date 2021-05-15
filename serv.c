@@ -99,16 +99,16 @@ int searchAllOnlineUsers(message *msg){
 		for(int i = 0; i < num_fields; i++)
 		{
 			if(row[i]!=NULL){
-				strncpy(msg->userOnline[j],row[i],strlen(row[i]));
+				strncpy(msg->userOnline[j].name, row[i], strlen(row[i]));
 				j++;
-				printf("---------%s------ ", msg->userOnline[j]);
+				printf("---------%s------ ", msg->userOnline[j].name);
 			} 
 		}
 		printf("\n");
 	}
 
 	for(int i =0; i< 10 ; i++){
-		printf("DENTRO User: %s\n", msg->userOnline[i]);
+		printf("DENTRO User: %s\n", msg->userOnline[i].name);
 	}
 	msg->messageType[1] = j;
 	return 1;
@@ -132,7 +132,7 @@ void * doNetworking(void * ClientDetail){
 
 		int rtn = recv(clientSocket,(message *)&msg, sizeof(msg),0);
 		printf("\nRTN %d", rtn);
-		printf("\nznAISODAD %s",msg.user);
+		//printf("\nznAISODAD %s",msg.data);
 		
 		if(msg.messageType[0] == 1){
 			int existClientInDataBase = searchSockUserDb(msg.user);
@@ -164,7 +164,7 @@ void * doNetworking(void * ClientDetail){
 			int status = searchAllOnlineUsers(&msgSend);
 			if(status){
 				for(int i =0; i< msgSend.messageType[1] ; i++){
-					printf("User: %s\n", msgSend.userOnline[i]);
+					printf("User: %s\n", msgSend.userOnline[i].name);
 				}
 			}
 			msgSend.messageType[0] = 3;
@@ -172,6 +172,7 @@ void * doNetworking(void * ClientDetail){
 		
 			send(clientSocket,(void *)&msgSend,sizeof(msgSend),0);
 		}
+		printf("OOOOOOOOOOOOOOOOOOOOOO");
 
 	}
 
