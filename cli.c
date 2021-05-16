@@ -59,7 +59,7 @@ void * doRecieving(void * sockID){
 
 		message data;
 		memset(&data, '0', sizeof(data));
-		int read = recv(clientSocket,(message *)&data, sizeof data, 0);
+		int read = recv(clientSocket,(char *)&data, sizeof data, 0);
 		printf("PPPPP %d - %d\n",data.messageType[0], data.messageType[1] );
 
 		if(data.messageType[0] == 1){
@@ -101,12 +101,11 @@ int main(){
 	pthread_create(&thread, NULL, doRecieving, (void *) &clientSocket );
 	printf("Login do Servidor...\n");
 	printf("Digite seu Username: ");
-	gets(msg.user);
+	scanf("%[^\n]s",msg.user);
 	
 	msg.messageType[0] = 1;
 	printf("SEGUNDO%d\n", sizeof(msg));
-	sleep(3);
-	int rtn = send(clientSocket,(void*)&msg, sizeof(msg),0);
+	int rtn = send(clientSocket,(char*)&msg, sizeof(msg),0);
 	printf("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU");
 	char userChat[100];
 	
@@ -130,12 +129,12 @@ int main(){
 				scanf("%[^\n]s",msg.data);
 				if(strcmp(msg.data,"exit")) break;
 				msg.messageType[0] = 2;
-				send(clientSocket,(void*)&msg, sizeof(msg),0);
+				send(clientSocket,(char*)&msg, sizeof(msg),0);
 			}
 		}
 		if(option == 3){
 			msg.messageType[0] = 3;
-			send(clientSocket,(void*)&msg, sizeof(msg),0);
+			send(clientSocket,(char*)&msg, sizeof(msg),0);
 		}
 		
 		//scanf("%[^\n]s",userChat);

@@ -131,7 +131,7 @@ void * doNetworking(void * ClientDetail){
 
 		char output[1024];
 
-		int rtn = recv(clientSocket,(message *)&msg,sizeof(msg),0);
+		int rtn = recv(clientSocket,(char *)&msg,sizeof(msg),0);
 		printf("\nznAISODAD %d",msg.messageType[0]);
 		printf("\nznAISODAD--------- %s",msg.data);
 		if(msg.messageType[0] == 1){
@@ -150,7 +150,7 @@ void * doNetworking(void * ClientDetail){
 			msgSend.messageType[1]= 4;
 			printf("\nOK %d - %d\n", msgSend.messageType[0], msgSend.messageType[1]);
 		
-			send(clientSocket,(void *)&msgSend,sizeof(msgSend),0);
+			send(clientSocket,(char *)&msgSend,sizeof(msgSend),0);
 			
 			
 			//retornar todos ja cadastrados.

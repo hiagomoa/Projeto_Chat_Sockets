@@ -41,7 +41,7 @@ void * doRecieving(void * sockID){
 
 		message data;
 
-		int read = recv(clientSocket,(message *)&data, sizeof data, 0);
+		int read = recv(clientSocket,(char *)&data, sizeof data, 0);
 		printf("PPPPP %d - %d\n",data.messageType[0], data.messageType[1]);
 
 		if(data.messageType[0] == 1){
@@ -78,7 +78,7 @@ int main(){
 	strcpy(msg.data,"QFOI?");
 	msg.messageType[0] = 1;
 
-	int rtn = send(clientSocket,(void*)&msg, sizeof(msg),0);
+	int rtn = send(clientSocket,(char*)&msg, sizeof(msg),0);
 	printf("Retorn send %d",rtn);
 	
 	while(1){

@@ -47,9 +47,18 @@ struct client Client[1024];
 pthread_t thread[1024];
 
 void registerDb(char msg[], int clientSocket){
-	char query[100];
-	printf("\nValor do user eh: %s", msg);
-	snprintf(query,99,"INSERT INTO mydb.usuario values(%d,\"%s\",%d)",clientSocket,msg,1);
+	char query[100]= "INSERT INTO mydb.usuario values(";
+	char sockString[10];
+	sprintf(sockString, "%i", clientSocket);
+	printf("O valor do convertido: %s", sockString);
+	strncat(query, sockString, 99);
+	strncat(query, ", \"", 99);
+	strncat(query, msg, 99);
+	strncat(query, ", ", 99);
+	strncat(query, "1)", 2);
+
+	printf("\nValor do user eh: %s\n", query);
+	//snprintf(query,99,"INSERT INTO mydb.usuario values(%d,\"%s\",%d)",clientSocket,msg,1);
 	if (mysql_query(conn, query) != 0)
 	{
 		fprintf(stderr, "Query Failure\n");                                                                           
@@ -57,26 +66,33 @@ void registerDb(char msg[], int clientSocket){
 }
 
 int searchSockUserDb(char* msg){
-	char query[100];
-	snprintf(query,99,"SELECT socket from mydb.usuario where username =\"%s\"", msg);
-	printf("%s",query);
-	if (mysql_query(conn, query) != 0)
-	{
-		fprintf(stderr, "Query Failure\n");
-		//return EXIT_FAILURE;                                                                             
-	}   
-	MYSQL_RES *result ;
-  	result = mysql_store_result(conn);     
+    char query[100] = "SELECT socket from mydb.usuario where username =\"";
+    printf("\n%s-",msg);
+    //snprintf(query,99,"SELECT socket from mydb.usuario where username ="%s"", msg);
+    strncat(msg,"\"",50);
+    strncat(query,msg,99);
+    printf("\n%s\n",query);
+    if (mysql_query(conn, query) != 0)
+    {
+        fprintf(stderr, "Query Failure\n");
+        //return EXIT_FAILURE;
+    }
+	printf("\nVeioss\n");
+    MYSQL_RES *result ;
+    result = mysql_store_result(conn);
+	printf("\nVeioss2\n");
+     int num_fields = mysql_num_fields(result);
 
- 	int num_fields = mysql_num_fields(result);
+    MYSQL_ROW row;
+    row = mysql_fetch_row(result);
+	printf("\nVeioss3\n");
+    if(row != NULL){
+        printf("ENTROU\n");
+        return row[0];
+    }
+	printf("\nChegou no fim\n");
 
-	MYSQL_ROW row;
-	row = mysql_fetch_row(result);
-	 
-	if(row[0] != NULL){
-		return row[0];
-	}
-	return -1;
+    return -1;
 }
 
 int searchAllOnlineUsers(message *msg){
@@ -130,7 +146,7 @@ void * doNetworking(void * ClientDetail){
 
 		memset(&msg, '\0', sizeof(msg) );
 
-		int rtn = recv(clientSocket,(message *)&msg, sizeof(msg),0);
+		int rtn = recv(clientSocket,(char *)&msg, sizeof(msg),0);
 		printf("\nRTN %d", rtn);
 		//printf("\nznAISODAD %s",msg.data);
 		
@@ -143,7 +159,7 @@ void * doNetworking(void * ClientDetail){
 			msgSend.messageType[0] = 1;
 			strncpy(msgSend.data,"TUDO CONECTADO",strlen("TUDO CONECTADO"));
 			
-			send(clientSocket,(void *)&msgSend,sizeof(msgSend),0);
+			send(clientSocket,(char *)&msgSend,sizeof(msgSend),0);
 		}
 		if(msg.messageType[0] == 2){
 			message msgSend;
@@ -156,7 +172,7 @@ void * doNetworking(void * ClientDetail){
 
 			int sockerUserDestin = searchSockUserDb(msg.user);
 
-			send(sockerUserDestin,(void *)&msgSend,sizeof(msgSend),0);
+			send(sockerUserDestin,(char *)&msgSend,sizeof(msgSend),0);
 		}
 		if(msg.messageType[0] == 3){
 
@@ -170,9 +186,8 @@ void * doNetworking(void * ClientDetail){
 			msgSend.messageType[0] = 3;
 			printf("\nOK %d - %d\n", msgSend.messageType[0], msgSend.messageType[1]);
 		
-			send(clientSocket,(void *)&msgSend,sizeof(msgSend),0);
+			send(clientSocket,(char *)&msgSend,sizeof(msgSend),0);
 		}
-		printf("OOOOOOOOOOOOOOOOOOOOOO");
 
 	}
 
