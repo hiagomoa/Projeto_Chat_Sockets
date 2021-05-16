@@ -58,17 +58,22 @@ void * doRecieving(void * sockID){
 	while(1){
 
 		message data;
-		memset(&data, '0', sizeof(data));
+		//memset(&data, '0', sizeof(data));
+		explicit_bzero(&data, sizeof(message));
 		int read = recv(clientSocket,(char *)&data, sizeof data, 0);
 		printf("PPPPP %d - %d\n",data.messageType[0], data.messageType[1] );
 
 		if(data.messageType[0] == 1){
 			printf("\nUsuarios Online :\n");
 			printf("- %s\n",data.data);
+			explicit_bzero(&data, sizeof(message));
 		}
 		
 		if(data.messageType[0] == 2){
+			
+			//bzero(&data.data, sizeof(data.data)));
 			printf("[%s] - %s\n",data.user,data.data);
+			explicit_bzero(&data.data, 1024);
 		}
 
 		if(data.messageType[0] == 3){
@@ -76,7 +81,10 @@ void * doRecieving(void * sockID){
 			for(int i=0; i< data.messageType[1] ; i++){
 				printf("- %s\n",data.userOnline[i].name);
 			}
+			explicit_bzero(&data, sizeof(message));
 		}
+		explicit_bzero(&data, sizeof(message));
+		//bzero(&data.data, sizeof(data.data)));
 	}
 }
 
@@ -121,14 +129,17 @@ int main(){
 		printf("\nOpcao : ");
 		scanf("%d",&option);
 		if(option == 1){
+			__fpurge(stdin);
 			printf("\nPara sair digite - \"exit\" - ");
 			printf("\nDigite o user para envio: ");
 			scanf("%[^\n]s",msg.destName);
 			//strcpy(msg.originName,msg.user);
 			while(1){
+				__fpurge(stdin);
 				scanf("%[^\n]s",msg.data);
-				if(strcmp(msg.data,"exit")) break;
+				//if(strcmp(msg.data,"exit") != 0) break;
 				msg.messageType[0] = 2;
+				printf("FOI?\n");
 				send(clientSocket,(char*)&msg, sizeof(msg),0);
 			}
 		}

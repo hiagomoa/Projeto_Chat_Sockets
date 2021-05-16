@@ -87,8 +87,9 @@ int searchSockUserDb(char* msg){
     row = mysql_fetch_row(result);
 	printf("\nVeioss3\n");
     if(row != NULL){
-        printf("ENTROU\n");
-        return row[0];
+        printf("ENTROU11 %d\n",atoi(row[0]));
+		printf("ENTROU22 %s\n",row[0]);
+        return atoi(row[0]);
     }
 	printf("\nChegou no fim\n");
 
@@ -148,7 +149,7 @@ void * doNetworking(void * ClientDetail){
 
 		int rtn = recv(clientSocket,(char *)&msg, sizeof(msg),0);
 		printf("\nRTN %d", rtn);
-		//printf("\nznAISODAD %s",msg.data);
+		printf("\nznAISODAD %d\n",msg.messageType[0]);
 		
 		if(msg.messageType[0] == 1){
 			int existClientInDataBase = searchSockUserDb(msg.user);
@@ -164,15 +165,15 @@ void * doNetworking(void * ClientDetail){
 		if(msg.messageType[0] == 2){
 			message msgSend;
 			msgSend.messageType[0] = 2;
-
+			printf("chegou aki A\n");
 			//strcpy(msgSend.originName, msg.originName);
 			strncpy(msgSend.user, msg.user,strlen(msg.user));
 			strncpy(msgSend.destName, msg.destName,strlen(msg.destName));
 			strncpy(msgSend.data, msg.data,strlen(msg.data));
-
-			int sockerUserDestin = searchSockUserDb(msg.user);
-
-			send(sockerUserDestin,(char *)&msgSend,sizeof(msgSend),0);
+			printf("chegou aki \n");
+			int socketUserDestin = searchSockUserDb(msg.destName);
+			printf("SOcket do carinha - %d\n",socketUserDestin);
+			send(socketUserDestin,(char *)&msgSend,sizeof(msgSend),0);
 		}
 		if(msg.messageType[0] == 3){
 
