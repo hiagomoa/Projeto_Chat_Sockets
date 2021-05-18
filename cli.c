@@ -55,8 +55,8 @@ messagetype[1] contador de qtd de usuarios
 void * doRecieving(void * sockID){
 
 	int clientSocket = *((int *) sockID);
-
-	while(1){
+	int exit = 1;
+	while(exit == 1){
 
 		message data;
 		int read = recv(clientSocket,(char *)&data, sizeof data, 0);
@@ -81,6 +81,10 @@ void * doRecieving(void * sockID){
 			for(int i=0; i< data.countUserOnline ; i++){
 				printf("- %s\n",data.userOnline[i].name);
 			}
+		}
+		
+		if(data.messageType == 4){
+			exit = 0;
 		}
 	}
 }
@@ -114,8 +118,8 @@ int main(){
 	
 	int option;
 	char flagExit;
-
-	while(1){
+	int exit= 1;
+	while(exit == 1){
 		printf("\nOpções:\n");
 		printf("1 - Enviar mensagem para um usuário online(Para ver quem esta online escolha a opcao 2)\n");
 		printf("2 - Exibir Lista de amigos\n");
@@ -144,6 +148,12 @@ int main(){
 		if(option == 3){
 			msg.messageType = 3;
 			send(clientSocket,(char*)&msg, sizeof(msg),0);
+		}
+		if(option == 4){
+			msg.messageType = 4;
+			send(clientSocket,(char*)&msg, sizeof(msg),0);
+			close(clientSocket);
+			exit = 0;
 		}
 		if(strcmp(msg.data, "exit") != 0){
 			printf("\n[ATENCAO] digite uma opcao valida\n");

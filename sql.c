@@ -51,10 +51,18 @@ int main(void)
   //   fprintf(stderr, "Query Failure\n");
   //   return EXIT_FAILURE;                                                                             
   // }    
-  char query[50];
+
   //snprintf(query,49,"INSERT INTO mydb.usuario values(%d,\"%s\",%d)",2,"ALOU", 1);
   //printf("%s",query);
-  if (mysql_query(conn, "SELECT socket from mydb.usuario where username = \"asdfgh\"") != 0)
+  char user[10] = "A";
+    char query[100] = "SELECT socket from mydb.usuario where username = ";
+    printf("\n%s-\n",user);
+    strncat(query,"\"",10);
+    strncat(query,user,99);
+    strncat(query,"\"",1);
+    printf("\n%s\n",query);
+
+  if (mysql_query(conn, query) != 0)
   {
     fprintf(stderr, "Query Failure\n");
     return EXIT_FAILURE;                                                                             

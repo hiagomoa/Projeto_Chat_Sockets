@@ -22,7 +22,7 @@ typedef struct Message
     int messageType;//tipo da requisição ex: envio, get users...
 	int countUserOnline;
     char user[100];
-    char data[1024]; 
+    char data[1024];
     char destName[100];
 	int  msgLen;
 	//char originName[1024];
@@ -62,11 +62,46 @@ void registerDb(char msg[], int clientSocket){
 	}  
 }
 
-int searchSockUserDb(char* msg){
+void alterAvailability(char *user, char *status){ 
+	printf("\nCHEGOU EM: %s - %s\n",user, status);
+	char query[100]= "UPDATE mydb.usuario SET status = ";
+	strncat(query, status, 99);
+	strncat(query, " where username = ", 99);
+
+	strncat(query, "\"", 99);
+	strncat(query, user, 99);
+	strncat(query, "\"", 99);
+
+	printf("\nValor do user eh: %s\n", query);
+	if (mysql_query(conn, query) != 0)
+	{
+		fprintf(stderr, "Query Failure\n");                                                                           
+	}  
+}
+void alterSockUser(char *user, int sock){
+	char query[100]= "UPDATE mydb.usuario SET socket = ";//é socket? 
+	char sockString[100];
+	sprintf(sockString, "%i", sock);
+	strncat(query, sockString, 99);
+	strncat(query, " where username = ", 99);
+	
+	printf("O valor do convertido: %s", sockString);
+	strncat(query, "\"", 99);
+	strncat(query, user, 99);
+	strncat(query, "\"", 99);
+
+	printf("\nValor do user eh: %s\n", query);
+	if (mysql_query(conn, query) != 0)
+	{
+		fprintf(stderr, "Query Failure\n");                                                                           
+	}  
+}
+
+int searchSockUserDb(char* user){
     char query[100] = "SELECT socket from mydb.usuario where username =\"";
-    printf("\n%s-",msg);
-    strncat(msg,"\"",50);
-    strncat(query,msg,99);
+    printf("\n%s-",user);
+	strncat(query,user,99);
+    strncat(query,"\"",50);
     printf("\n%s\n",query);
     if (mysql_query(conn, query) != 0)
     {
@@ -82,8 +117,41 @@ int searchSockUserDb(char* msg){
     row = mysql_fetch_row(result);
 	printf("\nVeioss3\n");
     if(row != NULL){
-        printf("ENTROU11 %d\n",atoi(row[0]));
-		printf("ENTROU22 %s\n",row[0]);
+        printf("ENTROU11 %d\n", atoi(row[0]));
+		printf("ENTROU22 %s\n", row[0]);
+        return atoi(row[0]);
+    }
+	printf("\nChegou no fim\n");
+
+    return -1;
+}
+
+int searchAndSetNewSockUserDb(char* user,int sock){
+    char query[100] = "SELECT socket from mydb.usuario where username =\"";
+    printf("\n%s-",user);
+	strncat(query,user,99);
+    strncat(query,"\"",50);
+    printf("\n%s\n",query);
+    if (mysql_query(conn, query) != 0)
+    {
+        fprintf(stderr, "Query Failure\n");
+    }
+	printf("\nVeioss\n");
+    MYSQL_RES *result ;
+    result = mysql_store_result(conn);
+	printf("\nVeioss2\n");
+     int num_fields = mysql_num_fields(result);
+
+    MYSQL_ROW row;
+    row = mysql_fetch_row(result);
+	printf("\nVeioss3\n");
+    if(row != NULL){// tem tbm que alterar o socket aqui
+		printf("asddaddaddddd %s\n",row);
+		printf("asddaddaddddd %s\n",row[0]);
+		alterAvailability(user, "1");
+		alterSockUser(user, sock);
+        printf("ENTROU11 %d\n", atoi(row[0]));
+		printf("ENTROU22 %s\n", row[0]);
         return atoi(row[0]);
     }
 	printf("\nChegou no fim\n");
@@ -125,12 +193,16 @@ int searchAllOnlineUsers(message *msg){
 	msg->countUserOnline = j;
 	return 1;
 }
+
+
+
 void * doNetworking(void * ClientDetail){
 	message msg;
 	struct client* client = (struct client*)  ClientDetail;
 	int clientSocket = client -> sockID;
 	printf("\nCLIENTE N: %d\n", clientSocket);
-	while(1){
+	int exit = 1;
+	while(exit==1){
 
 		char data[1024];
 
@@ -144,7 +216,7 @@ void * doNetworking(void * ClientDetail){
 		printf("\nRTN %d", rtn);
 		printf("\nznAISODAD %d\n",msg.messageType);
 		if(msg.messageType == 1){
-			int existClientInDataBase = searchSockUserDb(msg.user);
+			int existClientInDataBase = searchAndSetNewSockUserDb(msg.user,clientSocket);
 			if(existClientInDataBase == -1){
 			 	registerDb(msg.user,clientSocket);
 			}
@@ -174,7 +246,7 @@ void * doNetworking(void * ClientDetail){
 			message msgSend;
 			int status = searchAllOnlineUsers(&msgSend);
 			if(status){
-				for(int i =0; i< msgSend.countUserOnline ; i++){
+				for(int i =0; i< msgSend.countUserOnline ; i++){//ninguem ta ouvindo n
 					printf("User: %s\n", msgSend.userOnline[i].name);
 				}
 			}
@@ -182,6 +254,14 @@ void * doNetworking(void * ClientDetail){
 			printf("\nOK %d - %d\n", msgSend.messageType, msgSend.countUserOnline);
 		
 			send(clientSocket,(char *)&msgSend,sizeof(msgSend),0);
+		}
+		if(msg.messageType == 4){ // criar query pra mudar o status no banco
+			alterAvailability(msg.user,"0");
+			message msgSend;
+			msgSend.messageType = 4;
+			send(clientSocket,(char *)&msgSend,sizeof(msgSend),0);
+			close(clientSocket);
+			exit = 0;
 		}
 
 	}
