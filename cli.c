@@ -29,11 +29,12 @@ typedef struct Users
 
 typedef struct Message
 {
-    int messageType[2];//tipo da requisição ex: envio, get users...
-	//int countUserOnline;
+    int messageType;//tipo da requisição ex: envio, get users...
+	int countUserOnline;
     char user[100];
     char data[1024]; 
     char destName[100];
+	int  msgLen;
 	//char originName[1024];
     users userOnline[100];
 } message;
@@ -58,33 +59,29 @@ void * doRecieving(void * sockID){
 	while(1){
 
 		message data;
-		//memset(&data, '0', sizeof(data));
-		explicit_bzero(&data, sizeof(message));
 		int read = recv(clientSocket,(char *)&data, sizeof data, 0);
-		printf("PPPPP %d - %d\n",data.messageType[0], data.messageType[1] );
+		printf("PPPPP %d - %d\n",data.messageType, data.countUserOnline );
 
-		if(data.messageType[0] == 1){
+		if(data.messageType == 1){
 			printf("\nUsuarios Online :\n");
 			printf("- %s\n",data.data);
-			explicit_bzero(&data, sizeof(message));
 		}
 		
-		if(data.messageType[0] == 2){
+		if(data.messageType == 2){
+			printf("[%s] - ",data.user);
 			
-			//bzero(&data.data, sizeof(data.data)));
-			printf("[%s] - %s\n",data.user,data.data);
-			explicit_bzero(&data.data, 1024);
+			for(int i=0;i<data.msgLen;i++){
+				printf("%c",data.data[i]);
+			}
+			printf("\n");
 		}
 
-		if(data.messageType[0] == 3){
+		if(data.messageType == 3){
 			printf("\nUsuarios Online :\n");
-			for(int i=0; i< data.messageType[1] ; i++){
+			for(int i=0; i< data.countUserOnline ; i++){
 				printf("- %s\n",data.userOnline[i].name);
 			}
-			explicit_bzero(&data, sizeof(message));
 		}
-		explicit_bzero(&data, sizeof(message));
-		//bzero(&data.data, sizeof(data.data)));
 	}
 }
 
@@ -111,10 +108,8 @@ int main(){
 	printf("Digite seu Username: ");
 	scanf("%[^\n]s",msg.user);
 	
-	msg.messageType[0] = 1;
-	printf("SEGUNDO%d\n", sizeof(msg));
+	msg.messageType = 1;
 	int rtn = send(clientSocket,(char*)&msg, sizeof(msg),0);
-	printf("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU");
 	char userChat[100];
 	
 	int option;
@@ -133,29 +128,28 @@ int main(){
 			printf("\nPara sair digite - \"exit\" - ");
 			printf("\nDigite o user para envio: ");
 			scanf("%[^\n]s",msg.destName);
-			//strcpy(msg.originName,msg.user);
 			while(1){
 				__fpurge(stdin);
 				scanf("%[^\n]s",msg.data);
-				//if(strcmp(msg.data,"exit") != 0) break;
-				msg.messageType[0] = 2;
-				printf("FOI?\n");
+				printf("\n------%d\n\n\n", strlen(msg.data));
+				msg.msgLen = strlen(msg.data);
+				if(strcmp(msg.data,"exit") == 0){
+					break;
+				}
+				msg.messageType = 2;
+
 				send(clientSocket,(char*)&msg, sizeof(msg),0);
 			}
 		}
 		if(option == 3){
-			msg.messageType[0] = 3;
+			msg.messageType = 3;
 			send(clientSocket,(char*)&msg, sizeof(msg),0);
 		}
-		
-		//scanf("%[^\n]s",userChat);
-
-		char input[1024];
-
-		
-	//	scanf("%s",input);
-
-
+		if(strcmp(msg.data, "exit") != 0){
+			printf("\n[ATENCAO] digite uma opcao valida\n");
+			sleep(2);
+		}
+		__fpurge(stdin);
 	}
 
 

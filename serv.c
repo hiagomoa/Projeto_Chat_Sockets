@@ -19,31 +19,29 @@ typedef struct Users
 
 typedef struct Message
 {
-    int messageType[2];//tipo da requisição ex: envio, get users...
-	//int countUserOnline;
+    int messageType;//tipo da requisição ex: envio, get users...
+	int countUserOnline;
     char user[100];
     char data[1024]; 
     char destName[100];
+	int  msgLen;
 	//char originName[1024];
     users userOnline[100];
 } message;
 
-
+int sockID;
+struct sockaddr_in clientAddr;
+int length=0;
 int clientCount = 0;
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 struct client{
-
-	int index;
 	int sockID;
-	struct sockaddr_in clientAddr;
-	int len;
-
 };
 
-struct client Client[1024];
+struct client Client;
 pthread_t thread[1024];
 
 void registerDb(char msg[], int clientSocket){
@@ -58,7 +56,6 @@ void registerDb(char msg[], int clientSocket){
 	strncat(query, "1)", 2);
 
 	printf("\nValor do user eh: %s\n", query);
-	//snprintf(query,99,"INSERT INTO mydb.usuario values(%d,\"%s\",%d)",clientSocket,msg,1);
 	if (mysql_query(conn, query) != 0)
 	{
 		fprintf(stderr, "Query Failure\n");                                                                           
@@ -68,14 +65,12 @@ void registerDb(char msg[], int clientSocket){
 int searchSockUserDb(char* msg){
     char query[100] = "SELECT socket from mydb.usuario where username =\"";
     printf("\n%s-",msg);
-    //snprintf(query,99,"SELECT socket from mydb.usuario where username ="%s"", msg);
     strncat(msg,"\"",50);
     strncat(query,msg,99);
     printf("\n%s\n",query);
     if (mysql_query(conn, query) != 0)
     {
         fprintf(stderr, "Query Failure\n");
-        //return EXIT_FAILURE;
     }
 	printf("\nVeioss\n");
     MYSQL_RES *result ;
@@ -127,16 +122,14 @@ int searchAllOnlineUsers(message *msg){
 	for(int i =0; i< 10 ; i++){
 		printf("DENTRO User: %s\n", msg->userOnline[i].name);
 	}
-	msg->messageType[1] = j;
+	msg->countUserOnline = j;
 	return 1;
 }
 void * doNetworking(void * ClientDetail){
-	
 	message msg;
-	struct client* clientDetail = (struct client*) ClientDetail;
-	int index = clientDetail -> index;
-	int clientSocket = clientDetail -> sockID;
-
+	struct client* client = (struct client*)  ClientDetail;
+	int clientSocket = client -> sockID;
+	printf("\nCLIENTE N: %d\n", clientSocket);
 	while(1){
 
 		char data[1024];
@@ -149,43 +142,44 @@ void * doNetworking(void * ClientDetail){
 
 		int rtn = recv(clientSocket,(char *)&msg, sizeof(msg),0);
 		printf("\nRTN %d", rtn);
-		printf("\nznAISODAD %d\n",msg.messageType[0]);
-		
-		if(msg.messageType[0] == 1){
+		printf("\nznAISODAD %d\n",msg.messageType);
+		if(msg.messageType == 1){
 			int existClientInDataBase = searchSockUserDb(msg.user);
 			if(existClientInDataBase == -1){
 			 	registerDb(msg.user,clientSocket);
 			}
 			message msgSend;
-			msgSend.messageType[0] = 1;
+			msgSend.messageType = 1;
 			strncpy(msgSend.data,"TUDO CONECTADO",strlen("TUDO CONECTADO"));
 			
 			send(clientSocket,(char *)&msgSend,sizeof(msgSend),0);
 		}
-		if(msg.messageType[0] == 2){
+		if(msg.messageType == 2){
 			message msgSend;
-			msgSend.messageType[0] = 2;
+			msgSend.messageType = 2;
 			printf("chegou aki A\n");
 			//strcpy(msgSend.originName, msg.originName);
 			strncpy(msgSend.user, msg.user,strlen(msg.user));
 			strncpy(msgSend.destName, msg.destName,strlen(msg.destName));
 			strncpy(msgSend.data, msg.data,strlen(msg.data));
+			msgSend.msgLen = msg.msgLen;
+			printf("\n\n\n tamanho da msg %d\n\n\n",msgSend.msgLen);
 			printf("chegou aki \n");
 			int socketUserDestin = searchSockUserDb(msg.destName);
 			printf("SOcket do carinha - %d\n",socketUserDestin);
 			send(socketUserDestin,(char *)&msgSend,sizeof(msgSend),0);
 		}
-		if(msg.messageType[0] == 3){
+		if(msg.messageType == 3){
 
 			message msgSend;
 			int status = searchAllOnlineUsers(&msgSend);
 			if(status){
-				for(int i =0; i< msgSend.messageType[1] ; i++){
+				for(int i =0; i< msgSend.countUserOnline ; i++){
 					printf("User: %s\n", msgSend.userOnline[i].name);
 				}
 			}
-			msgSend.messageType[0] = 3;
-			printf("\nOK %d - %d\n", msgSend.messageType[0], msgSend.messageType[1]);
+			msgSend.messageType = 3;
+			printf("\nOK %d - %d\n", msgSend.messageType, msgSend.countUserOnline);
 		
 			send(clientSocket,(char *)&msgSend,sizeof(msgSend),0);
 		}
@@ -210,7 +204,6 @@ int connectionDb(){
 }
 
 int main(){
-		
 	connectionDb();
 
 	int serverSocket = socket(PF_INET, SOCK_STREAM, 0);
@@ -221,7 +214,6 @@ int main(){
 	serverAddr.sin_port = htons(8888);
 	serverAddr.sin_addr.s_addr = htons(INADDR_ANY);
 
-
 	if(bind(serverSocket,(struct sockaddr *) &serverAddr , sizeof(serverAddr)) == -1) return 0;
 
 	if(listen(serverSocket,1024) == -1) return 0;
@@ -229,14 +221,10 @@ int main(){
 	printf("Server started listenting on port 8080 ...........\n");
 
 	while(1){
+		Client.sockID = accept(serverSocket, (struct sockaddr*) &clientAddr, &length);
+		pthread_create(&thread[clientCount], NULL, doNetworking, (void *) &Client);
 
-		Client[clientCount].sockID = accept(serverSocket, (struct sockaddr*) &Client[clientCount].clientAddr, &Client[clientCount].len);
-		Client[clientCount].index = clientCount;
-
-		pthread_create(&thread[clientCount], NULL, doNetworking, (void *) &Client[clientCount]);
-
-		clientCount ++;
- 
+		clientCount++;
 	}
 	  
 	for(int i = 0 ; i < clientCount ; i ++)
