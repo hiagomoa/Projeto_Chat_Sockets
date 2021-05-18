@@ -12,7 +12,7 @@ int connectionDb(){
     fprintf(stderr, "Could not init DB\n");
     return EXIT_FAILURE;
   }
-  if (mysql_real_connect(conn, "172.17.0.1", "user", "user", "mydb", 3306, NULL, 0) == NULL)
+  if (mysql_real_connect(conn, "192.168.0.107", "user", "user", "mydb", 3307, NULL, 0) == NULL)
   {
     fprintf(stderr, "DB Connection Error\n");
     return EXIT_FAILURE;

@@ -60,7 +60,7 @@ void * doRecieving(void * sockID){
 
 		message data;
 		int read = recv(clientSocket,(char *)&data, sizeof data, 0);
-		printf("PPPPP %d - %d\n",data.messageType, data.countUserOnline );
+		//printf("PPPPP %d - %d\n",data.messageType, data.countUserOnline );
 
 		if(data.messageType == 1){
 			printf("\nUsuarios Online :\n");
