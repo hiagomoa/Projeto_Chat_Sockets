@@ -18,3 +18,30 @@ CREATE TABLE `mensagens` (
   KEY `id_username` (`id_username`),
   CONSTRAINT `mensagens_ibfk_1` FOREIGN KEY (`id_username`) REFERENCES `usuario` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+CREATE TABLE `amigos` (
+  `idusuario` varchar(255) NOT NULL,
+  `idusuario1` varchar(255) NOT NULL,
+  PRIMARY KEY (`user`, `users`),
+  CONSTRAINT `user_fk` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`username`)
+  CONSTRAINT `Users_fk` FOREIGN KEY (`idusuario1`) REFERENCES `usuario` (`username`)
+);
+
+
+SELECT socket, username , status 
+FROM usuario
+INNER JOIN amigos
+ON idusuario = "A";
+
+SELECT NOME, SEXO, BAIRRO, CIDADE /* PROJECAO */ 
+FROM CLIENTE /* ORIGEM */
+	INNER JOIN ENDERECO /*JUNCAO */
+	ON IDCLIENTE = ID_CLIENTE
+WHERE SEXO = 'F'; /* SELECAO */
+
+SELECT socket, username , status 
+FROM usuario
+INNER JOIN amigos
+ON idusuario1 = usuario.username 
+WHERE idusuario = "A";
