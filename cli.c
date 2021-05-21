@@ -110,7 +110,16 @@ void *doRecieving(void *sockID)
 			printf("\nAmigos online: \n");
 			for (int i = 0; i < data.countUserOnline; i++)
 			{
-				printf("- %s \n",  data.userOnline[i].name);
+				printf("- %s \n", data.userOnline[i].name);
+			}
+			printf("\n");
+		}
+		if (data.messageType == 7)
+		{
+			printf("\nMensagem do Grupo de Onlines: \n");
+			for (int i = 0; i < data.msgLen; i++)
+			{
+				printf("%c", data.data[i]);
 			}
 			printf("\n");
 		}
@@ -158,12 +167,13 @@ int main()
 		printf("4 - sair\n");
 		printf("5 - Adicionar um amigo pelo username\n");
 		printf("6 - Visualizar amigos online\n");
+		printf("7 - Mandar mensagem para Grupo de usuários online\n");
 		printf("\nOpcao : ");
 		scanf("%d", &option);
 		if (option == 1)
 		{
 			__fpurge(stdin);
-			printf("\nPara sair digite - \"exit\" - ");
+			printf("\nPara sair digite - \"exit\" \n");
 			printf("\nDigite o user para envio: ");
 			scanf("%[^\n]s", msg.destName);
 			while (1)
@@ -209,7 +219,25 @@ int main()
 			msg.messageType = 6;
 			send(clientSocket, (char *)&msg, sizeof(msg), 0);
 		}
+		if (option == 7)
+		{
+			__fpurge(stdin);
+			printf("\nPara sair do grupo digite - \"exit\" - ");
+			while (1)
+			{
+				__fpurge(stdin);
+				scanf("%[^\n]s", msg.data);
+				printf("\n------%d\n\n\n", strlen(msg.data));
+				msg.msgLen = strlen(msg.data);
+				if (strcmp(msg.data, "exit") == 0)
+				{
+					break;
+				}
+				msg.messageType = 7;
 
+				send(clientSocket, (char *)&msg, sizeof(msg), 0);
+			}
+		}
 		if (strcmp(msg.data, "exit") != 0)
 		{
 			printf("\n[ATENCAO] digite uma opcao valida\n");

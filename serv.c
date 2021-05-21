@@ -81,23 +81,24 @@ void alterAvailability(char *user, char *status)
 		fprintf(stderr, "Query Failure\n");
 	}
 }
-void deleteFieldBd(char* user){
+void deleteFieldBd(char *user)
+{
 	char query[100] = "DELETE FROM mydb.mensagens WHERE id_username = \"";
 	strncat(query, user, 99);
 	strncat(query, "\"", 99);
 	printf("\nValor da querry DELETE eh: %s\n", query);
-	if (mysql_query(conn, query) != 0){
+	if (mysql_query(conn, query) != 0)
+	{
 		fprintf(stderr, "Query Failure\n");
 	}
-
 }
-void searchMessageSendedBeforeLogin(char* user, int sockUser){	
-	
+void searchMessageSendedBeforeLogin(char *user, int sockUser)
+{
+
 	char query[100] = "SELECT remetente, mensagem FROM mydb.mensagens WHERE id_username = \"";
 	strncat(query, user, 99);
 	strncat(query, "\"", 99);
 	printf("\nValor da querry INSERT eh: %s\n", query);
-
 
 	if (mysql_query(conn, query) != 0)
 	{
@@ -110,13 +111,15 @@ void searchMessageSendedBeforeLogin(char* user, int sockUser){
 	MYSQL_ROW row;
 	int j = 0;
 	message msg;
-	
-	while ((row = mysql_fetch_row(result))){
+
+	while ((row = mysql_fetch_row(result)))
+	{
 		bzero(&msg, sizeof(message));
 		msg.messageType = 2;
-		if (row[0] != NULL){
+		if (row[0] != NULL)
+		{
 			strncpy(msg.data, row[0], strlen(row[0]));
-			strcpy(msg.user,row[0]);
+			strcpy(msg.user, row[0]);
 
 			snprintf(msg.data, 99, "%s", row[1]);
 			msg.msgLen = strlen(msg.data);
@@ -143,7 +146,8 @@ int insertFriend(char *user, char *friend)
 	}
 	return 0;
 }
-int sendMessageUserOffiline( char* remetente, char* msg, char* user){
+int sendMessageUserOffiline(char *remetente, char *msg, char *user)
+{
 	char query[200] = "INSERT INTO mydb.mensagens (remetente, mensagem, id_username) VALUES(\"";
 	strncat(query, remetente, 200);
 	strncat(query, "\", \"", 200);
@@ -159,7 +163,6 @@ int sendMessageUserOffiline( char* remetente, char* msg, char* user){
 		return -1;
 	}
 	return 0;
-
 }
 
 int listFriends(message *msg, char *user)
@@ -302,7 +305,38 @@ int searchAndSetNewSockUserDb(char *user, int sock)
 
 	return -1;
 }
+void sendMessageAllUserOnline(char* user, char* msg){
+	char query[100];
+	snprintf(query, 99, "SELECT socket from mydb.usuario where status = 1");
+	if (mysql_query(conn, query) != 0)
+	{
+		fprintf(stderr, "Query Failure\n");
+		return 0;
+	}
+	MYSQL_RES *result;
+	result = mysql_store_result(conn);
 
+	int num_fields = mysql_num_fields(result);
+
+	MYSQL_ROW row;
+	int j = 0;
+	message msgSend;
+	msgSend.messageType = 7;
+	sprintf(msgSend.data,"[%s] - %s",user,msg);
+	msgSend.msgLen = strlen(msgSend.data);
+	while ((row = mysql_fetch_row(result)))
+	{
+		if (row[0] != NULL)
+		{
+			
+			send(atoi(row[0]), (char *)&msgSend, sizeof(msgSend), 0);
+		}
+		printf("\n");
+	}
+
+	
+
+}
 int searchAllOnlineUsers(message *msg)
 {
 	char query[100];
@@ -399,12 +433,12 @@ void *doNetworking(void *ClientDetail)
 			if (socketUserDestin.status == -1)
 			{
 				msgSend.messageType = 5;
-				strncpy(msgSend.data,"Error Socket", strlen("Error Socket"));
+				strncpy(msgSend.data, "Error Socket", strlen("Error Socket"));
 				msgSend.msgLen = strlen("Error Socket");
 				send(clientSocket, (char *)&msgSend, sizeof(msgSend), 0);
 				return;
 			}
-			int status = sendMessageUserOffiline(msg.user, msg.data,msg.destName);
+			int status = sendMessageUserOffiline(msg.user, msg.data, msg.destName);
 			printf("SOcket do carinha - %d\n", socketUserDestin);
 		}
 		if (msg.messageType == 3)
@@ -460,6 +494,10 @@ void *doNetworking(void *ClientDetail)
 
 			msgSend.messageType = 6;
 			send(clientSocket, (char *)&msgSend, sizeof(msgSend), 0);
+		}
+		if (msg.messageType == 7)
+		{
+			sendMessageAllUserOnline(msg.user,msg.data);
 		}
 	}
 
