@@ -97,11 +97,20 @@ void *doRecieving(void *sockID)
 
 		if (data.messageType == 5)
 		{
-			printf("\nOPAAAAAAA\n");
 			printf("\nMensagem de retorno: \n");
 			for (int i = 0; i < data.msgLen; i++)
 			{
 				printf("%c", data.data[i]);
+			}
+			printf("\n");
+		}
+
+		if (data.messageType == 6)
+		{
+			printf("\nAmigos online: \n");
+			for (int i = 0; i < data.countUserOnline; i++)
+			{
+				printf("- %s \n",  data.userOnline[i].name);
 			}
 			printf("\n");
 		}
@@ -146,8 +155,9 @@ int main()
 		printf("1 - Enviar mensagem para um usuário online(Para ver quem esta online escolha a opcao 2)\n");
 		printf("2 - Exibir Lista de amigos\n");
 		printf("3 - Exibir Lista de usuários online\n");
-		printf("4 - sair");
+		printf("4 - sair\n");
 		printf("5 - Adicionar um amigo pelo username\n");
+		printf("6 - Visualizar amigos online\n");
 		printf("\nOpcao : ");
 		scanf("%d", &option);
 		if (option == 1)
@@ -193,6 +203,13 @@ int main()
 			msg.messageType = 5;
 			send(clientSocket, (char *)&msg, sizeof(msg), 0);
 		}
+
+		if (option == 6)
+		{
+			msg.messageType = 6;
+			send(clientSocket, (char *)&msg, sizeof(msg), 0);
+		}
+
 		if (strcmp(msg.data, "exit") != 0)
 		{
 			printf("\n[ATENCAO] digite uma opcao valida\n");

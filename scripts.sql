@@ -34,10 +34,10 @@ FROM usuario
 INNER JOIN amigos
 ON idusuario = "A";
 
-SELECT NOME, SEXO, BAIRRO, CIDADE /* PROJECAO */ 
-FROM CLIENTE /* ORIGEM */
-	INNER JOIN ENDERECO /*JUNCAO */
-	ON IDCLIENTE = ID_CLIENTE
+/*SELECT NOME, SEXO, BAIRRO, CIDADE /* PROJECAO */ 
+/*FROM CLIENTE /* ORIGEM */
+	/*INNER JOIN ENDERECO /*JUNCAO */
+	/*ON IDCLIENTE = ID_CLIENTE
 WHERE SEXO = 'F'; /* SELECAO */
 
 SELECT socket, username , status 
@@ -45,3 +45,16 @@ FROM usuario
 INNER JOIN amigos
 ON idusuario1 = usuario.username 
 WHERE idusuario = "A";
+
+INSERT INTO mydb.amigos
+(idusuario, idusuario1)
+VALUES('A', 'porca');
+
+
+
+INSERT INTO mydb.mensagens
+(remetente, mensagem, id_username)
+VALUES("rola", "opaaaa", "passarinho");
+
+DELETE FROM mydb.mensagens
+WHERE id_username="passarinho";
