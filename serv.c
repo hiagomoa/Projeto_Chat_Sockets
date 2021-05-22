@@ -16,7 +16,6 @@ typedef struct Users
 {
 	char name[100];
 } users;
-
 typedef struct Message
 {
 	int messageType; //tipo da requisição ex: envio, get users...
@@ -25,7 +24,7 @@ typedef struct Message
 	char data[1024];
 	char destName[100];
 	int msgLen;
-	//char originName[1024];
+	int port;
 	users userOnline[100];
 } message;
 
@@ -240,7 +239,7 @@ struct SockAndStatus
 sockAndStatus searchSockUserDb(char *user)
 {
 	sockAndStatus sockAndStatusVar;
-
+	printf("AAAA - %s\n", user);
 	char query[100] = "SELECT socket,status from mydb.usuario where username =\"";
 	printf("\n%s-", user);
 	strncat(query, user, 99);
@@ -263,10 +262,11 @@ sockAndStatus searchSockUserDb(char *user)
 	{
 		sockAndStatusVar.sock = atoi(row[0]);
 		sockAndStatusVar.status = atoi(row[1]);
+		printf("\nDentro %d - %d\n", sockAndStatusVar.sock, sockAndStatusVar.status);
 
 		return sockAndStatusVar;
 	}
-	printf("\nChegou no fim\n");
+	printf("\nChegou no fim %d - %d\n", sockAndStatusVar.sock, sockAndStatusVar.status);
 	sockAndStatusVar.status = -1;
 	return sockAndStatusVar;
 }
@@ -305,7 +305,8 @@ int searchAndSetNewSockUserDb(char *user, int sock)
 
 	return -1;
 }
-void sendMessageAllUserOnline(char* user, char* msg){
+void sendMessageAllUserOnline(char *user, char *msg)
+{
 	char query[100];
 	snprintf(query, 99, "SELECT socket from mydb.usuario where status = 1");
 	if (mysql_query(conn, query) != 0)
@@ -322,20 +323,17 @@ void sendMessageAllUserOnline(char* user, char* msg){
 	int j = 0;
 	message msgSend;
 	msgSend.messageType = 7;
-	sprintf(msgSend.data,"[%s] - %s",user,msg);
+	sprintf(msgSend.data, "[%s] - %s", user, msg);
 	msgSend.msgLen = strlen(msgSend.data);
 	while ((row = mysql_fetch_row(result)))
 	{
 		if (row[0] != NULL)
 		{
-			
+
 			send(atoi(row[0]), (char *)&msgSend, sizeof(msgSend), 0);
 		}
 		printf("\n");
 	}
-
-	
-
 }
 int searchAllOnlineUsers(message *msg)
 {
@@ -421,14 +419,13 @@ void *doNetworking(void *ClientDetail)
 			strncpy(msgSend.destName, msg.destName, strlen(msg.destName));
 			strncpy(msgSend.data, msg.data, strlen(msg.data));
 			msgSend.msgLen = msg.msgLen;
-			printf("\n\n\n tamanho da msg %d\n\n\n", msgSend.msgLen);
+			printf("\n\n\n tamanho da msg %d\n\n\ndestname: %s\n", msgSend.msgLen, msg.destName);
 			printf("chegou aki \n");
 			sockAndStatus socketUserDestin = searchSockUserDb(msg.destName);
 
 			if (socketUserDestin.status == 1)
 			{
 				send(socketUserDestin.sock, (char *)&msgSend, sizeof(msgSend), 0);
-				return;
 			}
 			if (socketUserDestin.status == -1)
 			{
@@ -436,10 +433,12 @@ void *doNetworking(void *ClientDetail)
 				strncpy(msgSend.data, "Error Socket", strlen("Error Socket"));
 				msgSend.msgLen = strlen("Error Socket");
 				send(clientSocket, (char *)&msgSend, sizeof(msgSend), 0);
-				return;
 			}
-			int status = sendMessageUserOffiline(msg.user, msg.data, msg.destName);
-			printf("SOcket do carinha - %d\n", socketUserDestin);
+			else
+			{
+				int status = sendMessageUserOffiline(msg.user, msg.data, msg.destName);
+				printf("SOcket do carinha - %d\n", socketUserDestin);
+			}
 		}
 		if (msg.messageType == 3)
 		{
@@ -497,7 +496,17 @@ void *doNetworking(void *ClientDetail)
 		}
 		if (msg.messageType == 7)
 		{
-			sendMessageAllUserOnline(msg.user,msg.data);
+			sendMessageAllUserOnline(msg.user, msg.data);
+		}
+		if (msg.messageType == 8)
+		{
+			message msgSend;
+			sockAndStatus socketUserDestin = searchSockUserDb(msg.destName);
+			msgSend.messageType = 8;
+			msgSend.port = msg.port;
+			strcpy(msgSend.data,msg.data);
+			printf("\n Chegou aaqui %d,%d,SOCK:%d\n,", msgSend.port, msgSend.messageType, socketUserDestin.sock);
+			send(socketUserDestin.sock, (char *)&msgSend, sizeof(msgSend), 0);
 		}
 	}
 
