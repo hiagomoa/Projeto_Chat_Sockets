@@ -76,7 +76,7 @@ void *doRecieving(void *sockID)
 
 		if (data.messageType == 1)
 		{
-			printf("\nUsuarios Online :\n");
+			printf("\nStatus :\n");
 			printf("- %s\n", data.data);
 		}
 
@@ -137,8 +137,6 @@ void *doRecieving(void *sockID)
 		if (data.messageType == 8)
 		{
 			system("clear");
-			printf("\nCHEGOU AKI NO CLI 2\n");
-			
 			struct sockaddr_in serv_addr;
 			int sockfd;
 			/* Create a socket first */
@@ -198,9 +196,7 @@ void *doRecieving(void *sockID)
 void *SendFileToClient(int *arg)
 {
 	int len = sizeof(clientAddr);
-	printf("\n||||1111111111111111111\n");
 	int mySocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &len);
-	printf("\n||||22222222222222222222\n");
 	struct sockaddr_in c_addr;
 	int connfd = mySocket;
 	printf("Connection accepted and id: %d\n", connfd);
@@ -220,12 +216,10 @@ void *SendFileToClient(int *arg)
 		/* First read file in chunks of 256 bytes */
 		unsigned char buff[1024] = {0};
 		int nread = fread(buff, 1, 1024, fp);
-		//printf("Bytes read %d \n", nread);
 
 		/* If read was success, send data. */
 		if (nread > 0)
 		{
-			//printf("Sending \n");
 			write(connfd, buff, nread);
 		}
 		if (nread < 1024)
@@ -255,7 +249,6 @@ int main()
 
 	message msg;
 	memset(&msg, '\0', sizeof(msg));
-	printf("\n%d", sizeof(msg));
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(8888);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -283,8 +276,9 @@ int main()
 	while (exit == 1)
 	{	
 		bzero(&msg, sizeof(message));
+		__fpurge(stdin);
 		printf("\nOpções:\n");
-		printf("1 - Enviar mensagem para um usuário online(Para ver quem esta online escolha a opcao 2)\n");
+		printf("1 - Enviar mensagem para um usuário (Para ver quem esta online escolha a opcao 2)\n");
 		printf("2 - Exibir Lista de usuários online\n");
 		printf("3 - Adicionar um amigo pelo username\n");
 		printf("4 - Visualizar amigos online\n");
@@ -305,16 +299,16 @@ int main()
 			{
 				__fpurge(stdin);
 				scanf("%[^\n]s", msg.data);
-				printf("\n------U%d\n", strlen(msg.data));
 				msg.msgLen = strlen(msg.data);
-				printf("\nUUUUUUUUUUUUU\n");
+		
 				if (strcmp(msg.data, "exit") == 0)
 				{
 					break;
 				}
 				msg.messageType = 2;
-				printf("\neaereaerrrrrr\n");
+			
 				send(clientSocket, (char *)&msg, sizeof(msg), 0);
+				__fpurge(stdin);
 			}
 		}
 		if (option == 2)
@@ -322,12 +316,14 @@ int main()
 			msg.messageType = 3;
 			strcpy(msg.user,user);
 			send(clientSocket, (char *)&msg, sizeof(msg), 0);
+			__fpurge(stdin);
 		}
 		if (option == 7)
 		{
 			msg.messageType = 4;
 			strcpy(msg.user,user);
 			send(clientSocket, (char *)&msg, sizeof(msg), 0);
+			__fpurge(stdin);
 			close(clientSocket);
 			exit = 0;
 		}
@@ -336,17 +332,19 @@ int main()
 			__fpurge(stdin);
 			printf("\nDigite o user para adicionar: ");
 			scanf("%[^\n]s", msg.data);
-			printf("\n------%d\n\n\n", strlen(msg.data));
 			msg.msgLen = strlen(msg.data);
 			msg.messageType = 5;
 			strcpy(msg.user,user);
 			send(clientSocket, (char *)&msg, sizeof(msg), 0);
+			__fpurge(stdin);
 		}
 
 		if (option == 4)
 		{
+			strcpy(msg.user, user);
 			msg.messageType = 6;
 			send(clientSocket, (char *)&msg, sizeof(msg), 0);
+			__fpurge(stdin);
 		}
 		if (option == 5)
 		{
@@ -356,14 +354,13 @@ int main()
 			{
 				__fpurge(stdin);
 				scanf("%[^\n]s", msg.data);
-				printf("\n------%d\n\n\n", strlen(msg.data));
 				msg.msgLen = strlen(msg.data);
 				if (strcmp(msg.data, "exit") == 0)
 				{
 					break;
 				}
 				msg.messageType = 7;
-
+				strcpy(msg.user, user);
 				send(clientSocket, (char *)&msg, sizeof(msg), 0);
 			}
 		}
@@ -380,19 +377,15 @@ int main()
 			msg.port = 8080;
 
 			serverSocket = socket(PF_INET, SOCK_STREAM, 0);
-			printf("\n||||AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
-
 			struct sockaddr_in serverAddr;
 
 			serverAddr.sin_family = AF_INET;
 			serverAddr.sin_port = htons(8080);
 
 			serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-			printf("\n||||BBBBBBBBBBBBBBBBBBBBBBBBBBB\n");
-
 			if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
 				return 0;
-			printf("\n||||1111111111111111111\n");
+
 			if (listen(serverSocket, 1024) == -1)
 				return 0;
 
@@ -402,7 +395,6 @@ int main()
 			strcpy(msg.user,user);
 			strcpy(msg.data,fname);
 			send(clientSocket, (char *)&msg, sizeof(msg), 0);
-			printf("OPA\n");
 			
 			pthread_join(threadId, NULL);
 		} 
@@ -412,7 +404,8 @@ int main()
 			printf("\n[ATENCAO] digite uma opcao valida\n");
 			sleep(2);
 		}
-		__fpurge(stdin);}
+		__fpurge(stdin);
+		}
 
 	}
 }

@@ -23,9 +23,9 @@ CREATE TABLE `mensagens` (
 CREATE TABLE `amigos` (
   `idusuario` varchar(255) NOT NULL,
   `idusuario1` varchar(255) NOT NULL,
-  PRIMARY KEY (`user`, `users`),
-  CONSTRAINT `user_fk` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`username`)
-  CONSTRAINT `Users_fk` FOREIGN KEY (`idusuario1`) REFERENCES `usuario` (`username`)
+  PRIMARY KEY (`idusuario`, `idusuario1`),
+  CONSTRAINT `user_fk` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`username`),
+  CONSTRAINT `users_fk` FOREIGN KEY (`idusuario1`) REFERENCES `usuario` (`username`)
 );
 
 
