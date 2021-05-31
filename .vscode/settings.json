@@ -1,6 +1,8 @@
 {
     "files.associations": {
-        "teste.C": "cpp"
+        "*.rmd": "markdown",
+        "teste.C": "cpp",
+        "in.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

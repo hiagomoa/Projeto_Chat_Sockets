@@ -11,18 +11,7 @@
 #include <netdb.h>
 #include <errno.h>
 
-// na hr de conectar verificar msgs que lhe foram recebidas enquanto estava offline
-// quando sair setar flag do banco para 0
-// typedef struct Message
-// {
-//     int messageType[2];//tipo da requisição ex: envio, get users...
-// 	//int countUserOnline;
-//     char user[100];
-//     char data[1024];
-//     char destName[100];
-// 	//char originName[1024];
-//     char userOnline[100][1024];
-// } message;
+
 char fname[100];
 int serverSocket;
 struct sockaddr_in clientAddr;
@@ -34,7 +23,7 @@ typedef struct Users
 
 typedef struct Message
 {
-	int messageType; //tipo da requisição ex: envio, get users...
+	int messageType; 
 	int countUserOnline;
 	char user[100];
 	char data[1024];
@@ -44,19 +33,6 @@ typedef struct Message
 	users userOnline[100];
 } message;
 
-/*messageType[0] Para serv
-1- cadastra no server
-2- envia a message para alguem
-3- lista de usuarios
-4- desloga
-messagetype[1] contador de qtd de usuarios
-*/
-
-/*messageType Para CLiente
-1- status de logado
-2- mensagem de alguem recebida
-3- imprime os usuarios online
-*/
 void gotoxy(int x, int y)
 {
 	printf("%c[%d;%df", 0x1B, y, x);
@@ -72,7 +48,6 @@ void *doRecieving(void *sockID)
 
 		message data;
 		recv(clientSocket, (char *)&data, sizeof data, 0);
-		//printf("PPPPP %d - %d\n",data.messageType, data.countUserOnline );
 
 		if (data.messageType == 1)
 		{
@@ -148,7 +123,7 @@ void *doRecieving(void *sockID)
 
 			/* Initialize sockaddr_in data structure */
 			serv_addr.sin_family = AF_INET;
-			serv_addr.sin_port = htons(data.port); // port
+			serv_addr.sin_port = htons(data.port); 
 			serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 			if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
 			{
@@ -162,7 +137,7 @@ void *doRecieving(void *sockID)
 			FILE *fp;
 			char fnameClient[100];
 			read(sockfd, fnameClient, 256);
-			//strcat(fname,"AK");
+
 			printf("File Name: %s\n", data.data);
 			printf("Receiving file...");
 			fp = fopen(data.data, "ab");
@@ -179,9 +154,7 @@ void *doRecieving(void *sockID)
 				gotoxy(0, 4);
 				printf("Received: %llf Mb", (sz / 1024));
 				fflush(stdout);
-				// recvBuff[n] = 0;
 				fwrite(recvBuff, 1, bytesReceived, fp);
-				// printf("%s \n", recvBuff);
 			}
 
 			if (bytesReceived < 0)
@@ -200,7 +173,6 @@ void *SendFileToClient(int *arg)
 	struct sockaddr_in c_addr;
 	int connfd = mySocket;
 	printf("Connection accepted and id: %d\n", connfd);
-	printf("Connected to Clent: %s:%d\n", inet_ntoa(c_addr.sin_addr), ntohs(c_addr.sin_port));
 	write(connfd, fname, 256);
 	printf("\nFNAME:%s\n",fname);
 	FILE *fp = fopen(fname, "rb");
@@ -210,14 +182,11 @@ void *SendFileToClient(int *arg)
 		return 1;
 	}
 
-	/* Read data from file and send it */
 	while (1)
 	{
-		/* First read file in chunks of 256 bytes */
 		unsigned char buff[1024] = {0};
 		int nread = fread(buff, 1, 1024, fp);
 
-		/* If read was success, send data. */
 		if (nread > 0)
 		{
 			write(connfd, buff, nread);

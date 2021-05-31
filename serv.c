@@ -393,7 +393,7 @@ void *doNetworking(void *ClientDetail)
 			if (status)
 			{
 				for (int i = 0; i < msgSend.countUserOnline; i++)
-				{ //ninguem ta ouvindo n
+				{ 
 					printf("User: %s\n", msgSend.userOnline[i].name);
 				}
 			}
@@ -401,7 +401,7 @@ void *doNetworking(void *ClientDetail)
 			send(clientSocket, (char *)&msgSend, sizeof(msgSend), 0);
 		}
 		if (msg.messageType == 4)
-		{ // criar query pra mudar o status no banco
+		{
 			alterAvailability(msg.user, "0");
 			message msgSend;
 			msgSend.messageType = 4;
@@ -410,7 +410,7 @@ void *doNetworking(void *ClientDetail)
 			exit = 0;
 		}
 		if (msg.messageType == 5)
-		{ // criar query pra mudar o status no banco
+		{ 
 			message msgSend;
 			int retorno = insertFriend(msg.user, msg.data);
 			msgSend.messageType = 5;
