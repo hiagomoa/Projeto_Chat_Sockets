@@ -204,8 +204,8 @@ void *SendFileToClient(int *arg)
 		}
 	}
 	printf("Closing Connection for id: %d\n", connfd);
-	close(connfd);
 	shutdown(connfd, SHUT_WR);
+	close(connfd);
 	sleep(2);
 }
 
